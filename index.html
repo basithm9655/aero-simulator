@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Dr. Sathish Dhawan Aerospace // Coimbatore 3D Flight Simulator</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<!-- Google Maps 3D JavaScript API -->
+<script async src="https://maps.googleapis.com/maps/api/js?loading=async&key=AIzaSyCJ9QtC-j8jLQEDkHvnOZdxNIbpD7nQKGM&libraries=maps3d"></script>
+</head>
+<body>
+<div id="app">
+  <!-- 3D Globe / Map Element -->
+  <div id="globe">
+    <gmp-map-3d id="google3d" mode="HYBRID" default-ui-hidden="true"></gmp-map-3d>
+    <div id="cesiumContainer" class="hidden"></div>
+  </div>
+
+  <!-- In-flight HUD Overlay -->
+  <div id="hud" class="hidden">
+    <!-- Top-Left Branding Badge -->
+    <div class="hud-panel hud-brand">
+      <img src="/logo.png" alt="Dr. Sathish Dhawan Aerospace" class="hud-logo">
+      <div class="hud-brand-text">
+        <b>DR. SATHISH DHAWAN AEROSPACE</b>
+        <span>COIMBATORE // 3D FLIGHT SIM</span>
+      </div>
+    </div>
+
+    <!-- Telemetry Tape -->
+    <div class="hud-panel hud-telem mono">
+      <div class="row"><span>ALT</span><b id="alt">0000</b> ft</div>
+      <div class="row"><span>IAS</span><b id="ias">000</b> kt</div>
+      <div class="row"><span>HDG</span><b id="hdg">090</b>°</div>
+      <div class="row"><span>VS</span><b id="vs">+0</b> fpm</div>
+      <div class="row"><span>PITCH</span><b id="pitch">+0.0</b>°</div>
+      <div class="row"><span>ROLL</span><b id="roll">+0.0</b>°</div>
+      <div class="row"><span>G-LOAD</span><b id="gload">1.00</b></div>
+      <div class="row"><span>THR</span><b id="thr">60</b>%</div>
+      <div id="stallWarn" class="hidden stall-badge">⚠ STALL WARNING ⚠</div>
+    </div>
+
+    <!-- Center Mission Waypoint -->
+    <div class="hud-panel hud-mission">
+      <b id="missionTitle">MISSION // DEPART PSG TECH</b>
+      <small id="missionSub">NAV 2.8 km · CODISSIA TRADE CENTER</small>
+    </div>
+
+    <!-- Central Avionics Crosshair & Artificial Horizon -->
+    <div id="horizon" class="hidden"></div>
+    <div class="crosshair"><i></i></div>
+
+    <!-- Dynamic Click-to-Steer Visual Yoke -->
+    <div id="clickYoke" class="hidden"><div id="clickNub"></div></div>
+
+    <!-- Cockpit Instrument Cluster (Speedometer, Attitude, Altimeter) -->
+    <div class="hud-instruments"><canvas id="pfd"></canvas></div>
+
+    <!-- On-Screen Interactive Throttle -->
+    <div class="screen-throttle mono">
+      <button class="thr-preset-btn" id="thrMax">MAX</button>
+      <div class="thr-slider-track" id="thrTrack">
+        <div class="thr-slider-fill" id="thrFill"></div>
+      </div>
+      <b class="thr-label" id="thrVal">60%</b>
+      <button class="thr-preset-btn" id="thrCruise">60%</button>
+      <button class="thr-preset-btn" id="thrIdle">IDLE</button>
+    </div>
+
+    <!-- Bottom Controls Hint -->
+    <div class="hud-panel hud-legend mono">
+      <kbd>Click / Drag</kbd> steer · <kbd>C</kbd> Camera Mode (Follow / Cockpit / Chase / Wing / Free) · <kbd>B</kbd> Brake · <kbd>H</kbd> Hangar
+    </div>
+
+    <!-- Top-Right Location Switcher -->
+    <div class="hud-location-bar">
+      <button id="locationBtn" class="hud-location-btn">📍 COIMBATORE RUNWAY ▾</button>
+    </div>
+
+    <!-- Essential Actions Bar -->
+    <div class="hud-actions">
+      <button id="engineBtn">3D: GOOGLE</button>
+      <button id="planeBtn">✈ A380 EMIRATES</button>
+      <button id="viewBtn">VIEW: FOLLOW</button>
+      <button id="brakeBtn">BRAKE: OFF</button>
+      <button id="flapBtn">FLAPS: 0°</button>
+      <button id="mouseBtn">MOUSE: OFF</button>
+      <button id="soundBtn" class="active">SOUND: ON</button>
+      <button id="resetBtn">RESET</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- Crash Explosion Screen Flash Effect -->
+  <div id="crashFlash"></div>
+
+  <!-- Opening Welcome Modal -->
+  <div id="boot" class="overlay">
+    <div class="welcome-card">
+      <div class="welcome-logo-container">
+        <img src="/logo.png" alt="Dr. Sathish Dhawan Aerospace" class="welcome-logo">
+      </div>
+      <h1>DR. SATHISH DHAWAN AEROSPACE</h1>
+      <div class="tagline">COIMBATORE // VFR AEROSPACE FLIGHT LAB</div>
+      <p>High-fidelity 3D aerodynamic flight simulation over real Coimbatore photorealistic terrain. Experience authentic runway takeoff, stick handling, coordinated banking lift, pilot POV cockpit, and real-time engine acoustics.</p>
+
+      <div class="welcome-features">
+        <div>
+          <b>GOOGLE 3D MAPS</b>
+          Real photogrammetry & terrain across Coimbatore & world cities
+        </div>
+        <div>
+          <b>REAL RUNWAY TAKEOFF</b>
+          Tarmac acceleration, nosewheel steer, rotation & liftoff
+        </div>
+        <div>
+          <b>AVIONICS HUD & EXPLODE FX</b>
+          First-person cockpit POV + authentic crash break & explosion
+        </div>
+      </div>
+
+      <div class="welcome-btns">
+        <button id="startRunwayBtn" class="primary">🛫 RUNWAY 05 TAKEOFF (COIMBATORE AIRPORT)</button>
+        <button id="startAirborneBtn">✈ AIRBORNE CRUISE (1250M)</button>
+        <button id="welcomeLocationBtn">🌍 CHANGE LOCATION (NYC / TOKYO / SF)</button>
+        <button id="hangarBtn">✈ AIRCRAFT HANGAR</button>
+        <button id="tourBtn">🎮 AUTOPILOT TOUR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Hangar Modal -->
+  <div id="hangarModal" class="overlay hidden">
+    <div class="welcome-card hangar-card">
+      <div class="hangar-header">
+        <h2>✈ FLEET HANGAR // SELECT 3D AIRCRAFT</h2>
+        <button id="closeHangarBtn" class="close-hangar-btn">✕</button>
+      </div>
+      <p style="color: #94a3b8; font-size: 11px; margin: 0 0 16px;">Select an authentic 3D aircraft with authentic GeoFS aerodynamics, weight ratios, and specifications:</p>
+      <div class="fleet-grid" id="fleetGrid"></div>
+    </div>
+  </div>
+
+  <!-- World Locations Modal -->
+  <div id="locationModal" class="overlay hidden">
+    <div class="welcome-card location-card">
+      <div class="hangar-header">
+        <h2>🌍 GOOGLE 3D WORLD DESTINATIONS</h2>
+        <button id="closeLocationBtn" class="close-hangar-btn">✕</button>
+      </div>
+      <p style="color: #94a3b8; font-size: 11px; margin: 0 0 14px;">Select any iconic destination to fly in full Google 3D photogrammetry and real elevation:</p>
+      <div class="location-grid" id="locationGrid"></div>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

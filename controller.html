@@ -1,0 +1,167 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02070c"><title>CBR VFR Controller</title>
+<style>
+:root{--c:#8eeaff;--g:#66ffb0;--a:#ffd56a;--r:#ff6878;--bg:#02070c}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:none}html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:var(--bg);color:#eaf7ff;font-family:system-ui,sans-serif}body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}main{height:100%;height:100dvh;display:flex;flex-direction:column;padding:8px;gap:8px}.top{display:flex;justify-content:space-between;align-items:center}.brand{font:800 12px monospace;letter-spacing:.12em}.status{font:800 9px monospace;padding:5px 7px;border:1px solid #234454;border-radius:999px;color:var(--a)}.status.ok{color:var(--g);border-color:#285e49}.horizon{position:relative;flex:1;min-height:0;border:1px solid #234454;border-radius:14px;overflow:hidden;background:linear-gradient(#10344d 0 50%,#10191e 50%);cursor:crosshair;touch-action:none}.horizon:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 49.6%,#8eeaff 49.8%,#8eeaff 50.2%,transparent 50.4%)}.horizon:after{content:'';position:absolute;left:50%;top:50%;width:2px;height:72%;background:#8eeaff88;transform:translate(-50%,-50%)}.stick-dot{position:absolute;left:50%;top:50%;width:18px;height:18px;border-radius:50%;background:var(--c);transform:translate(-50%,-50%);box-shadow:0 0 16px var(--c);pointer-events:none;transition:box-shadow .15s}.stick-dot.active{background:var(--g);box-shadow:0 0 24px var(--g)}.plane{position:absolute;left:50%;top:50%;width:96px;height:3px;background:var(--a);transform:translate(-50%,-50%);border-radius:3px;box-shadow:0 0 12px #ffd56a55;pointer-events:none}.plane:after{content:'';position:absolute;left:50%;top:-24px;width:3px;height:48px;background:var(--a);transform:translateX(-50%);border-radius:3px}.reads{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.read{padding:7px;border:1px solid #18313d;border-radius:10px;text-align:center}.label{display:block;color:#78919d;font:8px monospace}.read b{font:800 15px monospace}.control{padding:8px;border:1px solid #18313d;border-radius:10px}.row{display:flex;justify-content:space-between;align-items:center}.row b{font:800 11px monospace}.slider{width:100%;accent-color:var(--c)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.btn,.boost{min-height:48px;border:1px solid var(--c);border-radius:10px;background:transparent;color:var(--c);font-weight:900;cursor:pointer}.btn.primary{background:var(--c);color:#041018}.boost{border-color:var(--a);color:var(--a);min-height:50px}.btn:active,.boost:active{background:#8eeaff18;transform:scale(.985)}.mode-badge{font:9px monospace;text-align:center;color:#6fa5be;letter-spacing:.08em}@media(min-width:700px){main{max-width:900px;margin:auto;display:grid;grid-template-columns:1.5fr 1fr;grid-template-rows:auto 1fr auto auto auto auto;gap:8px}.top{grid-column:1/-1}.horizon{grid-row:2/7}.reads,.control,.actions,.boost,.mode-badge{grid-column:2}.boost{width:100%}}
+</style></head><body><main><div class="top"><div class="brand">CBR // VFR-06 LAPTOP / MOBILE</div><div id="link" class="status">CONNECTING</div></div><div class="horizon" id="horizon"><div class="plane"></div><div class="stick-dot" id="dot"></div></div><div class="reads"><div class="read"><span class="label">PITCH</span><b id="pitch">0°</b></div><div class="read"><span class="label">ROLL</span><b id="roll">0°</b></div><div class="read"><span class="label">YAW</span><b id="yaw">0°</b></div></div><div class="control"><div class="row"><span class="label">THROTTLE</span><b id="tlabel">58%</b></div><input id="thr" class="slider" type="range" min="0" max="100" value="58"></div><div class="actions"><button id="enable" class="btn primary">PHONE GYRO</button><button id="cal" class="btn">CENTER / CAL</button></div><button id="boost" class="boost">BOOST (SPACE)</button><div class="mode-badge" id="modeBadge">DRAG HORIZON OR USE WASD/ARROWS</div></main>
+<script>
+let ws,gyroEnabled=false,isDragging=false,neutral={a:0,b:0,g:0},raw={a:0,b:0,g:0},boosting=false;
+const $=id=>document.getElementById(id);
+const hEl=$('horizon'), dotEl=$('dot'), pEl=document.querySelector('.plane');
+
+async function fullscreen(){try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(_){} }
+
+function connect(){
+  try{
+    ws=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.hostname+':3001');
+    ws.onopen=()=>{$('link').textContent='LINKED';$('link').className='status ok';send('phone-hello')};
+    ws.onclose=()=>{$('link').textContent='OFFLINE';$('link').className='status';setTimeout(connect,1200)};
+  }catch(_){}
+}
+
+function relative(){
+  return {
+    pitch: raw.b - neutral.b,
+    roll: raw.g - neutral.g,
+    yaw: ((raw.a - neutral.a + 540)%360) - 180
+  };
+}
+
+function send(type='phone-data'){
+  if(!ws||ws.readyState!==1)return;
+  const r=relative();
+  ws.send(JSON.stringify({
+    type,
+    pitch:r.pitch,
+    roll:r.roll,
+    yaw:r.yaw,
+    throttle:+$('thr').value/100,
+    boost:boosting
+  }));
+}
+
+function render(){
+  const r=relative();
+  $('pitch').textContent=r.pitch.toFixed(1)+'°';
+  $('roll').textContent=r.roll.toFixed(1)+'°';
+  $('yaw').textContent=r.yaw.toFixed(1)+'°';
+  if(pEl){
+    pEl.style.transform=`translate(-50%, calc(-50% + ${Math.max(-55,Math.min(55,r.pitch*2.2))}px)) rotate(${Math.max(-65,Math.min(65,-r.roll))}deg)`;
+  }
+}
+
+// Interactive Laptop Drag on Horizon
+function updatePointerPos(cx, cy){
+  const rect = hEl.getBoundingClientRect();
+  const midX = rect.left + rect.width / 2;
+  const midY = rect.top + rect.height / 2;
+  const rx = Math.max(-1, Math.min(1, (cx - midX) / (rect.width * 0.45)));
+  const ry = Math.max(-1, Math.min(1, (cy - midY) / (rect.height * 0.45)));
+  raw.g = rx * 35;   // roll left / right
+  raw.b = -ry * 22;  // pull down = pitch up (+), push up = pitch down (-)
+  dotEl.style.left = `${50 + rx * 40}%`;
+  dotEl.style.top = `${50 + ry * 40}%`;
+  render();
+  send();
+}
+
+hEl.addEventListener('pointerdown', e => {
+  isDragging = true;
+  hEl.setPointerCapture(e.pointerId);
+  dotEl.classList.add('active');
+  $('modeBadge').textContent = 'LAPTOP STICK: DRAGGING';
+  updatePointerPos(e.clientX, e.clientY);
+});
+
+hEl.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  updatePointerPos(e.clientX, e.clientY);
+});
+
+const releasePointer = e => {
+  if (!isDragging) return;
+  isDragging = false;
+  raw.g = 0;
+  raw.b = 0;
+  dotEl.style.left = '50%';
+  dotEl.style.top = '50%';
+  dotEl.classList.remove('active');
+  $('modeBadge').textContent = 'DRAG HORIZON OR USE WASD/ARROWS';
+  render();
+  send();
+};
+hEl.addEventListener('pointerup', releasePointer);
+hEl.addEventListener('pointercancel', releasePointer);
+
+// Keyboard controls on laptop
+const kKeys = {};
+window.addEventListener('keydown', e => {
+  kKeys[e.key.toLowerCase()] = true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  let changed = false;
+  if(e.key === 'ArrowUp' || e.key === 'w') { raw.b = -18; changed = true; }
+  if(e.key === 'ArrowDown' || e.key === 's') { raw.b = 18; changed = true; }
+  if(e.key === 'ArrowLeft' || e.key === 'a') { raw.g = -28; changed = true; }
+  if(e.key === 'ArrowRight' || e.key === 'd') { raw.g = 28; changed = true; }
+  if(e.key === ' ') { boosting = true; changed = true; }
+  if(e.key === '=' || e.key === '+') { $('thr').value = Math.min(100, +$('thr').value + 5); $('tlabel').textContent = $('thr').value + '%'; changed = true; }
+  if(e.key === '-' || e.key === '_') { $('thr').value = Math.max(0, +$('thr').value - 5); $('tlabel').textContent = $('thr').value + '%'; changed = true; }
+  if(changed) { render(); send(); }
+});
+
+window.addEventListener('keyup', e => {
+  kKeys[e.key.toLowerCase()] = false;
+  if(['ArrowUp','w','ArrowDown','s'].includes(e.key)) raw.b = 0;
+  if(['ArrowLeft','a','ArrowRight','d'].includes(e.key)) raw.g = 0;
+  if(e.key === ' ') boosting = false;
+  render();
+  send();
+});
+
+// Phone Gyro Handler
+function handleOrientation(e){
+  if(!gyroEnabled) return;
+  raw={
+    a: Number.isFinite(e.alpha)? e.alpha : raw.a,
+    b: Number.isFinite(e.beta)? e.beta : raw.b,
+    g: Number.isFinite(e.gamma)? e.gamma : raw.g
+  };
+  render();
+  send();
+}
+
+async function enableGyro(){
+  await fullscreen();
+  try{
+    if(typeof DeviceOrientationEvent === 'undefined') throw new Error('Gyro unavailable');
+    if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+      const perm = await DeviceOrientationEvent.requestPermission();
+      if(perm !== 'granted') throw new Error('Permission denied');
+    }
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    gyroEnabled = true;
+    $('enable').textContent = 'GYRO: ON';
+    $('modeBadge').textContent = 'PHONE GYRO ACTIVE';
+  }catch(err){
+    $('modeBadge').textContent = 'LAPTOP MODE ACTIVE (NO GYRO)';
+    alert('Gyro is not available on this device. Use laptop mouse/trackpad drag on the horizon or WASD!');
+  }
+}
+
+$('enable').onclick = enableGyro;
+$('cal').onclick = async () => {
+  await fullscreen();
+  neutral = { ...raw };
+  render();
+  send('phone-calibrate');
+};
+$('thr').oninput = () => {
+  $('tlabel').textContent = $('thr').value + '%';
+  send();
+};
+$('boost').onpointerdown = async () => { await fullscreen(); boosting = true; send(); };
+$('boost').onpointerup = $('boost').onpointercancel = () => { boosting = false; send(); };
+
+connect();
+render();
+</script>
+</body>
+</html>

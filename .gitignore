@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+*.webm
+*.mp4
+*_clicks.json
+.DS_Store
+.vercel

@@ -1,0 +1,471 @@
+{
+  "a380": {
+    "id": 10,
+    "name": "Airbus A380",
+    "mass": 400000,
+    "dragFactor": 20,
+    "minimumSpeed": 200,
+    "startAltitude": 4.5,
+    "startTilt": 0,
+    "cameras": {
+      "follow": {
+        "distance": 110
+      },
+      "cockpit": {
+        "offsetBounds": [
+          -0.1,
+          1,
+          0,
+          0.2,
+          -0.2,
+          0.1
+        ],
+        "position": [
+          -0.54,
+          33,
+          1.5
+        ],
+        "orientation": [
+          0,
+          -10,
+          0
+        ]
+      },
+      "Wheels": {
+        "position": [
+          0,
+          -20,
+          -3
+        ],
+        "orientation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "Wing": {
+        "position": [
+          -13,
+          0,
+          4
+        ],
+        "orientation": [
+          10,
+          0,
+          0
+        ]
+      },
+      "Wing 2": {
+        "position": [
+          -5,
+          -6,
+          2
+        ],
+        "orientation": [
+          -90,
+          0,
+          0
+        ]
+      },
+      "Tail": {
+        "position": [
+          0,
+          -30,
+          16
+        ],
+        "orientation": [
+          0,
+          -20,
+          0
+        ]
+      }
+    },
+    "engines": [
+      {
+        "name": "engine1",
+        "type": "engine",
+        "thrust": 320000,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            -26,
+            -2,
+            -0.2
+          ],
+          "contrailAnchor": [
+            -26,
+            -30,
+            -0.2
+          ]
+        }
+      },
+      {
+        "name": "engine2",
+        "type": "engine",
+        "thrust": 320000,
+        "reverseThrust": 160000,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            -14.8,
+            6.5,
+            -2
+          ],
+          "contrailAnchor": [
+            -14.8,
+            -30,
+            -2
+          ]
+        }
+      },
+      {
+        "name": "engine3",
+        "type": "engine",
+        "thrust": 320000,
+        "reverseThrust": 160000,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            15,
+            6.5,
+            -2
+          ],
+          "contrailAnchor": [
+            15,
+            -30,
+            -2
+          ]
+        }
+      },
+      {
+        "name": "engine4",
+        "type": "engine",
+        "thrust": 320000,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            26.2,
+            -2,
+            -0.2
+          ],
+          "contrailAnchor": [
+            26.2,
+            -30,
+            -0.2
+          ]
+        }
+      }
+    ],
+    "contactProperties": {
+      "wheel": {
+        "frictionCoef": 15,
+        "dynamicFriction": 0.05,
+        "rollingFriction": 1e-05,
+        "lockSpeed": 0.008,
+        "damping": 1
+      },
+      "frontwheel": {
+        "frictionCoef": 15,
+        "dynamicFriction": 0.01,
+        "rollingFriction": 1e-05,
+        "lockSpeed": 0.008,
+        "damping": 1
+      },
+      "lightwheel": {
+        "frictionCoef": 5,
+        "dynamicFriction": 0.01,
+        "rollingFriction": 1e-05,
+        "lockSpeed": 0.008,
+        "damping": 1
+      },
+      "frame": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      },
+      "airfoil": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      }
+    }
+  },
+  "phenom": {
+    "id": 5,
+    "name": "Embraer Phenom 100",
+    "mass": 4200,
+    "dragFactor": 0.3,
+    "minimumSpeed": 200,
+    "startAltitude": 1.3,
+    "startTilt": 0,
+    "cameras": {
+      "follow": {
+        "distance": 25
+      },
+      "cockpit": {
+        "offsetBounds": [
+          0,
+          0.7,
+          -3.5,
+          0.2,
+          -0.4,
+          0.1
+        ],
+        "position": [
+          -0.35,
+          3.5,
+          1.1
+        ],
+        "orientation": [
+          0,
+          -12,
+          0
+        ],
+        "FOV": 1.6
+      },
+      "Cabin": {
+        "position": [
+          0.8,
+          1.2,
+          2.1
+        ],
+        "orientation": [
+          0,
+          0,
+          0
+        ],
+        "view": "cockpit",
+        "nearClipping": true,
+        "rotatable": true
+      },
+      "Wheels back": {
+        "position": [
+          0,
+          -5,
+          -0.8
+        ],
+        "orientation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "Left engine": {
+        "position": [
+          -1.7,
+          -3.2,
+          0.5
+        ],
+        "orientation": [
+          5,
+          0,
+          0
+        ]
+      },
+      "Right wing": {
+        "position": [
+          0,
+          -1,
+          0.5
+        ],
+        "orientation": [
+          70,
+          -10,
+          0
+        ]
+      },
+      "Tail": {
+        "position": [
+          0,
+          -5.7,
+          4
+        ],
+        "orientation": [
+          0,
+          -25,
+          0
+        ]
+      }
+    },
+    "engines": [
+      {
+        "name": "engine1",
+        "type": "engine",
+        "thrust": 7700,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            -1.3,
+            -1.5,
+            1.1
+          ],
+          "contrailAnchor": [
+            -1.3,
+            -20,
+            1.1
+          ]
+        }
+      },
+      {
+        "name": "engine2",
+        "type": "engine",
+        "thrust": 7700,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            1.3,
+            -1.5,
+            1.1
+          ],
+          "contrailAnchor": [
+            1.3,
+            -20,
+            1.1
+          ]
+        }
+      }
+    ],
+    "contactProperties": {
+      "wheel": {
+        "frictionCoef": 5,
+        "dynamicFriction": 0.01,
+        "rollingFriction": 1e-05,
+        "lockSpeed": 0.008,
+        "damping": 1
+      },
+      "lightwheel": {
+        "frictionCoef": 1,
+        "dynamicFriction": 0.01,
+        "rollingFriction": 1e-05,
+        "lockSpeed": 0.008,
+        "damping": 1
+      },
+      "frame": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      },
+      "airfoil": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      }
+    }
+  },
+  "f16": {
+    "id": 7,
+    "name": " F-16 Fighting Falcon",
+    "mass": 13000,
+    "dragFactor": 0.5,
+    "minimumSpeed": 200,
+    "startAltitude": 2,
+    "startTilt": 0,
+    "cameras": {
+      "follow": {
+        "distance": 25
+      },
+      "cockpit": {
+        "offsetBounds": [
+          -0.08,
+          0.08,
+          0,
+          0.1,
+          -0.1,
+          0.05
+        ],
+        "position": [
+          0,
+          4.6,
+          1.1
+        ],
+        "orientation": [
+          0,
+          -15,
+          0
+        ],
+        "FOV": 1.7
+      },
+      "Pilot": {
+        "position": [
+          0,
+          5.2,
+          0.8
+        ],
+        "orientation": [
+          180,
+          12,
+          0
+        ],
+        "FOV": 1.7,
+        "view": "cockpit",
+        "nearClipping": true
+      },
+      "Pilot back": {
+        "position": [
+          0.32,
+          4.2,
+          1.1
+        ],
+        "orientation": [
+          -15,
+          -15,
+          0
+        ],
+        "FOV": 1.7,
+        "view": "cockpit",
+        "nearClipping": true
+      }
+    },
+    "engines": [
+      {
+        "name": "engine",
+        "type": "engine",
+        "thrust": 76300,
+        "afterBurnerThrust": 127000,
+        "forceDirection": "Y",
+        "contrail": true,
+        "points": {
+          "forceSourcePoint": [
+            0,
+            -6,
+            0.1
+          ],
+          "contrailAnchor": [
+            0,
+            -30,
+            0.1
+          ]
+        }
+      }
+    ],
+    "contactProperties": {
+      "wheel": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "rollingFriction": 1e-05,
+        "damping": 1
+      },
+      "frame": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      },
+      "airfoil": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      },
+      "hook": {
+        "frictionCoef": 2,
+        "dynamicFriction": 0.01,
+        "damping": 1
+      }
+    }
+  }
+}
