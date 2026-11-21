@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 4173",
+    "dev": "vite --host 0.0.0.0 --port 3000",
     "ws": "node ws-server.mjs",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "lint": "node --check src/main.js src/flight.js src/audio.js src/aircraft3d.js src/instruments.js src/map.js src/obstacles.js src/runways.js",
+    "preview": "vite preview --host 0.0.0.0 --port 3000",
     "dev:all": "node dev-all.mjs"
   },
   "dependencies": {

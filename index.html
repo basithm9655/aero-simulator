@@ -3,154 +3,252 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Dr. Sathish Dhawan Aerospace // Coimbatore 3D Flight Simulator</title>
+<title>Dr. Sathish Dhawan Aerospace — 3D Flight Simulator</title>
+<meta name="description" content="Real-world 6-DOF aerodynamic 3D flight simulator over Google 3D photogrammetry and satellite terrain with full runway takeoff, ILS landing approach, retractable gear, flaps, authentic multi-layer aviation audio, and glass cockpit avionics.">
+<meta property="og:title" content="Dr. Sathish Dhawan Aerospace — 3D Flight Simulator">
+<meta property="og:description" content="Real-world 6-DOF aerodynamic 3D flight simulator with runway takeoff, ILS glideslope landings, multi-layer procedural aviation audio, and photorealistic 3D terrain.">
 <link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- Google Maps 3D JavaScript API -->
 <script async src="https://maps.googleapis.com/maps/api/js?loading=async&key=AIzaSyCJ9QtC-j8jLQEDkHvnOZdxNIbpD7nQKGM&libraries=maps3d"></script>
 </head>
 <body>
 <div id="app">
-  <!-- 3D Globe / Map Element -->
+  <!-- 3D Globe / Photorealistic World -->
   <div id="globe">
     <gmp-map-3d id="google3d" mode="HYBRID" default-ui-hidden="true"></gmp-map-3d>
     <div id="cesiumContainer" class="hidden"></div>
   </div>
 
-  <!-- In-flight HUD Overlay -->
+  <!-- Atmospheric Time-of-Day & Weather Tint Overlay -->
+  <div id="atmosphereLayer" class="atmo-day"></div>
+
+  <!-- G-Force Physiological Vignette (Blackout / Redout) -->
+  <div id="gVignette"></div>
+
+  <!-- Collimated First-Person Cockpit Windshield HUD -->
+  <canvas id="cockpitHud" class="hidden"></canvas>
+
+  <!-- In-Flight Avionics HUD Overlay -->
   <div id="hud" class="hidden">
-    <!-- Top-Left Branding Badge -->
+    <!-- Top-Left Brand Lockup -->
     <div class="hud-panel hud-brand">
-      <img src="/logo.png" alt="Dr. Sathish Dhawan Aerospace" class="hud-logo">
+      <img src="/logo.png" alt="Dr. Sathish Dhawan Aerospace" class="hud-logo" referrerpolicy="no-referrer">
       <div class="hud-brand-text">
-        <b>DR. SATHISH DHAWAN AEROSPACE</b>
-        <span>COIMBATORE // 3D FLIGHT SIM</span>
+        <b>Dr. Sathish Dhawan Aerospace</b>
+        <span>Coimbatore Aerospace Flight Lab</span>
       </div>
     </div>
 
-    <!-- Telemetry Tape -->
-    <div class="hud-panel hud-telem mono">
-      <div class="row"><span>ALT</span><b id="alt">0000</b> ft</div>
-      <div class="row"><span>IAS</span><b id="ias">000</b> kt</div>
-      <div class="row"><span>HDG</span><b id="hdg">090</b>°</div>
-      <div class="row"><span>VS</span><b id="vs">+0</b> fpm</div>
-      <div class="row"><span>PITCH</span><b id="pitch">+0.0</b>°</div>
-      <div class="row"><span>ROLL</span><b id="roll">+0.0</b>°</div>
-      <div class="row"><span>G-LOAD</span><b id="gload">1.00</b></div>
-      <div class="row"><span>THR</span><b id="thr">60</b>%</div>
-      <div id="stallWarn" class="hidden stall-badge">⚠ STALL WARNING ⚠</div>
-    </div>
-
-    <!-- Center Mission Waypoint -->
+    <!-- Top-Center Navigation & ILS Runway Strip -->
     <div class="hud-panel hud-mission">
-      <b id="missionTitle">MISSION // DEPART PSG TECH</b>
-      <small id="missionSub">NAV 2.8 km · CODISSIA TRADE CENTER</small>
+      <div class="mission-primary" id="missionTitle">Coimbatore Runway 05</div>
+      <div class="mission-sub mono" id="missionSub">VOCB RWY 05 · ILS 109.50 MHz · Ready for Takeoff</div>
     </div>
 
-    <!-- Central Avionics Crosshair & Artificial Horizon -->
-    <div id="horizon" class="hidden"></div>
-    <div class="crosshair"><i></i></div>
+    <!-- Top-Right Destination, Weather & Controls Guide -->
+    <div class="hud-top-right">
+      <button id="weatherBtn" class="hud-top-btn" title="Cycle Weather & Time (T)">Clear Day</button>
+      <button id="locationBtn" class="hud-top-btn" title="Select World Destination">Coimbatore RWY 05</button>
+      <button id="helpBtn" class="hud-top-btn hud-icon-btn" title="Flight Controls Guide (?)">?</button>
+    </div>
 
-    <!-- Dynamic Click-to-Steer Visual Yoke -->
+    <!-- Left Compact Flight Telemetry & Annunciators -->
+    <div class="hud-panel hud-telem mono" id="telemPanel">
+      <div class="telem-grid">
+        <div class="row"><span>ALT MSL</span><b id="alt">1325 ft</b></div>
+        <div class="row"><span>RADAR AGL</span><b id="agl">0 ft</b></div>
+        <div class="row"><span>IAS / M</span><b id="ias">000 kt · 0.00</b></div>
+        <div class="row"><span>HDG</span><b id="hdg">050°</b></div>
+        <div class="row"><span>V/S</span><b id="vs">+0 fpm</b></div>
+        <div class="row"><span>PITCH / ROLL</span><b id="att">+0.0° / +0.0°</b></div>
+        <div class="row"><span>AOA / G</span><b id="aoag">0.0° · 1.00G</b></div>
+        <div class="row"><span>WIND</span><b id="wind">050° / 6 kt</b></div>
+        <div class="row"><span>TRIM / FUEL</span><b id="trimFuel">0.0° · 100%</b></div>
+      </div>
+
+      <!-- Systems Status Bar (Gear 3-Green, Flaps, Brakes, AP) -->
+      <div class="sys-strip">
+        <span id="sysGear" class="sys-ok">GEAR DN</span>
+        <span class="sys-sep">·</span>
+        <span id="sysFlaps" class="sys-info">FLP 10°</span>
+        <span class="sys-sep">·</span>
+        <span id="sysAp" class="sys-muted">AP OFF</span>
+      </div>
+
+      <!-- Active Master Caution / Warning Annunciator -->
+      <div id="warnBanner" class="warn-banner hidden">STALL WARNING</div>
+    </div>
+
+    <!-- Post-Landing Touchdown Analytics Banner -->
+    <div id="landingCard" class="hud-panel landing-card hidden">
+      <div class="landing-head">
+        <b id="landingGrade">Butter Landing</b>
+        <span id="landingRunwayTag" class="mono">ON RUNWAY</span>
+      </div>
+      <div class="landing-metrics mono" id="landingMetrics">-95 fpm · 132 kt · 1.12G · Pitch +4.2°</div>
+      <div class="landing-hint">Hold Space to brake to full stop, press Z for Reverse Thrust, or advance throttle for Touch & Go.</div>
+    </div>
+
+    <!-- Subtle Flight Center Reference Crosshair -->
+    <div class="crosshair" id="crosshair"><i></i></div>
+
+    <!-- Dynamic Click-and-Drag Virtual Control Stick -->
     <div id="clickYoke" class="hidden"><div id="clickNub"></div></div>
 
-    <!-- Cockpit Instrument Cluster (Speedometer, Attitude, Altimeter) -->
-    <div class="hud-instruments"><canvas id="pfd"></canvas></div>
-
-    <!-- On-Screen Interactive Throttle -->
-    <div class="screen-throttle mono">
-      <button class="thr-preset-btn" id="thrMax">MAX</button>
-      <div class="thr-slider-track" id="thrTrack">
+    <!-- Right Interactive Throttle Quadrant -->
+    <div class="screen-throttle mono" id="throttleQuadrant">
+      <button class="thr-preset-btn" id="thrMax" title="Maximum / Afterburner (9)">MAX</button>
+      <div class="thr-slider-track" id="thrTrack" title="Drag or Scroll Mouse Wheel">
         <div class="thr-slider-fill" id="thrFill"></div>
       </div>
-      <b class="thr-label" id="thrVal">60%</b>
-      <button class="thr-preset-btn" id="thrCruise">60%</button>
-      <button class="thr-preset-btn" id="thrIdle">IDLE</button>
+      <b class="thr-label" id="thrVal">0%</b>
+      <span class="thr-n1" id="n1Val">N1 0%</span>
+      <button class="thr-preset-btn" id="thrCruise" title="Cruise Power (6)">CRZ</button>
+      <button class="thr-preset-btn" id="thrIdle" title="Idle Power (0)">IDLE</button>
+      <button class="thr-preset-btn thr-rev-btn" id="revBtn" title="Reverse Thrust on Ground (Z)">REV</button>
     </div>
 
-    <!-- Bottom Controls Hint -->
-    <div class="hud-panel hud-legend mono">
-      <kbd>Click / Drag</kbd> steer · <kbd>C</kbd> Camera Mode (Follow / Cockpit / Chase / Wing / Free) · <kbd>B</kbd> Brake · <kbd>H</kbd> Hangar
+    <!-- Collapsible Unified Bottom Avionics & Control Dock -->
+    <div class="bottom-dock-wrap" id="bottomDockWrap">
+      <button id="toggleDockBtn" class="dock-collapse-btn" title="Hide or Show Avionics Dock (H)">Hide Avionics</button>
+      <div class="hud-dock" id="bottomDock">
+        <!-- 4-Instrument Electronic PFD / HSI / ILS / PAPI Cluster -->
+        <div class="hud-instruments">
+          <canvas id="pfd"></canvas>
+        </div>
+
+        <!-- Complete Flight Control Switchboard -->
+        <div class="hud-controls-bar">
+          <button id="gearBtn" class="active" title="Toggle Landing Gear (G)">Gear: Down</button>
+          <button id="flapBtn" class="active" title="Cycle Flaps 0/10/20/30° (F)">Flaps: 10°</button>
+          <button id="brakeBtn" title="Toggle Airbrakes / Spoilers (B)">Spoilers: Off</button>
+          <button id="parkBrakeBtn" title="Toggle Parking Brake (P) / Hold Space for Wheel Brakes">Brake: Off</button>
+          <button id="trimDownBtn" title="Nose Down Trim ([)">Trim -</button>
+          <button id="trimUpBtn" title="Nose Up Trim (])">Trim +</button>
+          <button id="apBtn" title="Cycle Autopilot: Off / Nav / ILS Auto-Land (U)">AP: Off</button>
+          <button id="viewBtn" title="Cycle Camera View (C)">Cam: Follow</button>
+          <button id="planeBtn" title="Open Aircraft Hangar">A380 Emirates</button>
+          <button id="approachBtn" title="Jump to 3° ILS Final Approach for Landing Practice (L)">ILS Approach</button>
+          <button id="engineBtn" title="Switch 3D Globe Engine (M)">Map: Google 3D</button>
+          <button id="mouseBtn" title="Toggle Continuous Mouse Yoke (X)">Mouse: Off</button>
+          <button id="soundBtn" class="active" title="Mute or Unmute Audio (N)">Sound: On</button>
+          <button id="resetBtn" title="Reset Current Flight (R)">Reset</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Top-Right Location Switcher -->
-    <div class="hud-location-bar">
-      <button id="locationBtn" class="hud-location-btn">📍 COIMBATORE RUNWAY ▾</button>
-    </div>
-
-    <!-- Essential Actions Bar -->
-    <div class="hud-actions">
-      <button id="engineBtn">3D: GOOGLE</button>
-      <button id="planeBtn">✈ A380 EMIRATES</button>
-      <button id="viewBtn">VIEW: FOLLOW</button>
-      <button id="brakeBtn">BRAKE: OFF</button>
-      <button id="flapBtn">FLAPS: 0°</button>
-      <button id="mouseBtn">MOUSE: OFF</button>
-      <button id="soundBtn" class="active">SOUND: ON</button>
-      <button id="resetBtn">RESET</button>
-    </div>
-
-    <div class="toast" id="toast"></div>
+    <!-- Transient Flight Notification Toast -->
+    <div class="toast mono" id="toast"></div>
   </div>
 
-  <!-- Crash Explosion Screen Flash Effect -->
+  <!-- Crash Impact Screen Flash -->
   <div id="crashFlash"></div>
 
-  <!-- Opening Welcome Modal -->
+  <!-- Launch Welcome Modal -->
   <div id="boot" class="overlay">
     <div class="welcome-card">
-      <div class="welcome-logo-container">
-        <img src="/logo.png" alt="Dr. Sathish Dhawan Aerospace" class="welcome-logo">
-      </div>
-      <h1>DR. SATHISH DHAWAN AEROSPACE</h1>
-      <div class="tagline">COIMBATORE // VFR AEROSPACE FLIGHT LAB</div>
-      <p>High-fidelity 3D aerodynamic flight simulation over real Coimbatore photorealistic terrain. Experience authentic runway takeoff, stick handling, coordinated banking lift, pilot POV cockpit, and real-time engine acoustics.</p>
-
-      <div class="welcome-features">
-        <div>
-          <b>GOOGLE 3D MAPS</b>
-          Real photogrammetry & terrain across Coimbatore & world cities
-        </div>
-        <div>
-          <b>REAL RUNWAY TAKEOFF</b>
-          Tarmac acceleration, nosewheel steer, rotation & liftoff
-        </div>
-        <div>
-          <b>AVIONICS HUD & EXPLODE FX</b>
-          First-person cockpit POV + authentic crash break & explosion
+      <div class="welcome-head">
+        <img src="/logo.png" alt="Dr. Sathish Dhawan Aerospace" class="welcome-logo" referrerpolicy="no-referrer">
+        <div class="welcome-titles">
+          <h1>Dr. Sathish Dhawan Aerospace</h1>
+          <div class="tagline">Real-World 6-DOF 3D Flight Simulator</div>
         </div>
       </div>
 
-      <div class="welcome-btns">
-        <button id="startRunwayBtn" class="primary">🛫 RUNWAY 05 TAKEOFF (COIMBATORE AIRPORT)</button>
-        <button id="startAirborneBtn">✈ AIRBORNE CRUISE (1250M)</button>
-        <button id="welcomeLocationBtn">🌍 CHANGE LOCATION (NYC / TOKYO / SF)</button>
-        <button id="hangarBtn">✈ AIRCRAFT HANGAR</button>
-        <button id="tourBtn">🎮 AUTOPILOT TOUR</button>
+      <p class="welcome-desc">
+        Experience authentic aerodynamics, ISA atmospheric density, retractable landing gear, multi-stage flaps, ground effect flare, ILS glideslope landings, and multi-layered jet acoustics across photorealistic 3D cities and international runways.
+      </p>
+
+      <div class="welcome-specs">
+        <div>
+          <b>Real Aerodynamics</b>
+          ISA lift, drag, thrust lapse, ground effect, crosswinds &amp; bounce physics
+        </div>
+        <div>
+          <b>Takeoff &amp; ILS Landing</b>
+          Full 3° localizer, glideslope, PAPI lights, wheel brakes &amp; reverse thrust
+        </div>
+        <div>
+          <b>Pro Aviation Sound</b>
+          Engine-specific acoustics, hydraulics, tire chirp, sonic boom &amp; GPWS callouts
+        </div>
+      </div>
+
+      <div class="welcome-primary-row">
+        <button id="startRunwayBtn" class="btn-primary">Runway 05 Takeoff — Coimbatore</button>
+        <button id="startApproachBtn" class="btn-accent">ILS Final Approach — Practice Landing</button>
+      </div>
+
+      <div class="welcome-secondary-row">
+        <button id="startAirborneBtn" class="btn-secondary">Airborne Cruise (1250m)</button>
+        <button id="welcomeLocationBtn" class="btn-secondary">World Destinations &amp; Runways</button>
+        <button id="hangarBtn" class="btn-secondary">Aircraft Hangar</button>
+        <button id="tourBtn" class="btn-secondary">Autopilot Scenic Tour</button>
       </div>
     </div>
   </div>
 
   <!-- Fleet Hangar Modal -->
   <div id="hangarModal" class="overlay hidden">
-    <div class="welcome-card hangar-card">
-      <div class="hangar-header">
-        <h2>✈ FLEET HANGAR // SELECT 3D AIRCRAFT</h2>
-        <button id="closeHangarBtn" class="close-hangar-btn">✕</button>
+    <div class="modal-card hangar-card">
+      <div class="modal-header">
+        <div>
+          <h2>Aircraft Hangar</h2>
+          <p class="modal-sub">Select an aircraft with authentic weight, wing area, V-speeds, thrust-to-weight, and engine sound profile.</p>
+        </div>
+        <button id="closeHangarBtn" class="close-btn" aria-label="Close Hangar">✕</button>
       </div>
-      <p style="color: #94a3b8; font-size: 11px; margin: 0 0 16px;">Select an authentic 3D aircraft with authentic GeoFS aerodynamics, weight ratios, and specifications:</p>
       <div class="fleet-grid" id="fleetGrid"></div>
     </div>
   </div>
 
-  <!-- World Locations Modal -->
+  <!-- World Destinations & Runways Modal -->
   <div id="locationModal" class="overlay hidden">
-    <div class="welcome-card location-card">
-      <div class="hangar-header">
-        <h2>🌍 GOOGLE 3D WORLD DESTINATIONS</h2>
-        <button id="closeLocationBtn" class="close-hangar-btn">✕</button>
+    <div class="modal-card location-card">
+      <div class="modal-header">
+        <div>
+          <h2>World Destinations &amp; Airport Runways</h2>
+          <p class="modal-sub">Launch on any international runway for takeoff, align on 3° ILS final approach for landing, or start in scenic cruise.</p>
+        </div>
+        <button id="closeLocationBtn" class="close-btn" aria-label="Close Destinations">✕</button>
       </div>
-      <p style="color: #94a3b8; font-size: 11px; margin: 0 0 14px;">Select any iconic destination to fly in full Google 3D photogrammetry and real elevation:</p>
       <div class="location-grid" id="locationGrid"></div>
+    </div>
+  </div>
+
+  <!-- Flight Controls & Landing Guide Modal -->
+  <div id="controlsModal" class="overlay hidden">
+    <div class="modal-card controls-card">
+      <div class="modal-header">
+        <div>
+          <h2>Flight Controls &amp; Procedures</h2>
+          <p class="modal-sub">Full keyboard, mouse drag-stick, scroll throttle, and cockpit system shortcuts.</p>
+        </div>
+        <button id="closeControlsBtn" class="close-btn" aria-label="Close Guide">✕</button>
+      </div>
+      <div class="controls-grid mono">
+        <div><span>Pitch Up / Down</span><b>S / W or ↓ / ↑</b></div>
+        <div><span>Roll Left / Right</span><b>A / D or ← / →</b></div>
+        <div><span>Rudder / Nosewheel</span><b>Q / E</b></div>
+        <div><span>Click &amp; Drag Screen</span><b>Virtual Control Stick</b></div>
+        <div><span>Throttle Up / Down</span><b>Shift / Ctrl · Mouse Wheel · 0–9</b></div>
+        <div><span>Landing Gear</span><b>G (Down before landing!)</b></div>
+        <div><span>Flaps (0/10/20/30°)</span><b>F (Lowers stall speed)</b></div>
+        <div><span>Airbrakes / Spoilers</span><b>B</b></div>
+        <div><span>Wheel Brakes</span><b>Hold Space (on ground)</b></div>
+        <div><span>Parking Brake</span><b>P</b></div>
+        <div><span>Reverse Thrust</span><b>Z (on ground after touchdown)</b></div>
+        <div><span>Pitch Trim</span><b>[ / ]</b></div>
+        <div><span>Autopilot (Nav / ILS)</span><b>U</b></div>
+        <div><span>Camera Views</span><b>C (Follow / Cockpit / Chase / Wing / Free)</b></div>
+        <div><span>Weather &amp; Time</span><b>T (Day / Sunset / Night / Crosswind / Storm)</b></div>
+        <div><span>ILS Final Approach</span><b>L (Instant landing setup)</b></div>
+        <div><span>Mouse Yoke / Mute</span><b>X (Mouse) · N (Sound) · H (Hide HUD)</b></div>
+        <div><span>Reset / Map Engine</span><b>R (Reset) · M (Google 3D / Satellite)</b></div>
+      </div>
     </div>
   </div>
 </div>

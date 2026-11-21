@@ -1,0 +1,5 @@
+{
+  "name": "Dr. Sathish Dhawan Aerospace — 3D Flight Simulator",
+  "description": "Real-world 6-DOF aerodynamic 3D flight simulator over Google 3D photogrammetry and satellite terrain with full runway takeoff, ILS landing approach, retractable gear, flaps, authentic multi-layer aviation audio, and glass cockpit avionics.",
+  "requestFramePermissions": []
+}
